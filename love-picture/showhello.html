@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动态心形图案</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .heart-container {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            z-index: 10;
+        }
+        .small-heart {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            transform: rotate(45deg);
+            opacity: 0;
+            animation: fly-in 3s ease-out forwards, pulse 2s infinite;
+        }
+        .small-heart:before,
+        .small-heart:after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: absolute;
+            background-color: inherit;
+        }
+        .small-heart:before {
+            top: -4px;
+            left: 0;
+        }
+        .small-heart:after {
+            top: 0;
+            left: -4px;
+        }
+        @keyframes fly-in {
+            0% {
+                transform: rotate(45deg) translate(var(--start-x), var(--start-y));
+                opacity: var(--start-opacity);
+            }
+            100% {
+                transform: rotate(45deg) translate(0, 0);
+                opacity: 1;
+            }
+        }
+        @keyframes pulse {
+            0% {
+                transform: rotate(45deg) scale(1);
+            }
+            50% {
+                transform: rotate(45deg) scale(1.5);
+            }
+            100% {
+                transform: rotate(45deg) scale(1);
+            }
+        }
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 1.5s infinite alternate;
+        }
+        .cloud {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 100px;
+            animation: float 60s infinite linear;
+        }
+        .cloud:before, .cloud:after {
+            content: '';
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+        .text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            text-align: center;
+            z-index: 20;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+            animation-delay: 3s;
+            white-space: nowrap;
+        }
+        .rainbow-text {
+            animation: rainbow 5s linear infinite;
+        }
+        @keyframes rainbow {
+            0% { color: #FF69B4; }
+            20% { color: #FF1493; }
+            40% { color: #FF6347; }
+            60% { color: #FF4500; }
+            80% { color: #FF8C00; }
+            100% { color: #FF69B4; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #musicControl {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 60px;
+            height: 80px;
+            transition: transform 0.3s;
+        }
+        #musicControl:hover {
+            transform: scale(1.1);
+        }
+        #musicControl svg {
+            width: 100%;
+            height: 100%;
+        }
+        .balloon {
+            fill: #FF69B4;
+            stroke: #FF1493;
+            stroke-width: 2;
+        }
+        .balloon-string {
+            stroke: #FF1493;
+            stroke-width: 2;
+            fill: none;
+        }
+        .play-pause {
+            fill: white;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        #musicControl {
+            animation: float 3s ease-in-out infinite;
+        }
+        .flower {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 2s;
+        }
+        .rose {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23FF69B4" d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8s8,3.6,8,8S16.4,20,12,20z"/><path fill="%23FF1493" d="M12,6c-3.3,0-6,2.7-6,6s2.7,6,6,6s6-2.7,6-6S15.3,6,12,6z M12,16c-2.2,0-4-1.8-4-4s1.8-4,4-4s4,1.8,4,4S14.2,16,12,16z"/></svg>');
+        }
+        .lily {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23FFF" d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M12,20c-4.4,0-8-3.6-8-8s3.6-8,8-8s8,3.6,8,8S16.4,20,12,20z"/><path fill="%23FFD700" d="M12,6c-3.3,0-6,2.7-6,6s2.7,6,6,6s6-2.7,6-6S15.3,6,12,6z M12,16c-2.2,0-4-1.8-4-4s1.8-4,4-4s4,1.8,4,4S14.2,16,12,16z"/></svg>');
+        }
+    </style>
+</head>
+<body>
+    <div class="background" id="background"></div>
+    <div class="heart-container" id="heartContainer"></div>
+        <div class="text">
+        <span class="rainbow-text">永</span>
+        <span class="rainbow-text" style="animation-delay: 0.5s;">远</span><br>
+        <span class="rainbow-text" style="animation-delay: 1s;">爱</span>
+        <span class="rainbow-text" style="animation-delay: 1.5s;">你</span>
+    </div>
+
+    <audio id="bgMusic" loop muted>
+        <source src="dream-wedding.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <button id="musicControl">
+        <svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">
+            <path class="balloon" d="M30,5 C15,5 5,15 5,30 C5,45 15,55 30,55 C45,55 55,45 55,30 C55,15 45,5 30,5 Z" />
+            <path class="balloon-string" d="M30,55 Q30,65 35,75" />
+            <path class="play-pause" d="M25,20 L25,40 L40,30 Z" />
+        </svg>
+    </button>
+
+    <script>
+        const container = document.getElementById('heartContainer');
+        const background = document.getElementById('background');
+        const heartCount = 300;
+        const containerSize = 300;
+
+        function heartShape(t) {
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+            return {
+                x: 9 * x + containerSize / 2,
+                y: -9 * y + containerSize / 2
+            };
+        }
+
+        function getRandomColor() {
+            const colors = ['#FF69B4', '#FF1493', '#FF0000', '#FFA07A', '#FF6347'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function getRandomStartPosition() {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.max(window.innerWidth, window.innerHeight);
+            return {
+                x: Math.cos(angle) * distance,
+                y: Math.sin(angle) * distance
+            };
+        }
+
+        function createHearts(callback) {
+            let heartsCreated = 0;
+            for (let i = 0; i < heartCount; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'small-heart';
+
+                const t = (i / heartCount) * Math.PI * 2;
+                const position = heartShape(t);
+
+                const randomOffset = Math.random() * 20 - 10;
+                heart.style.left = `${position.x + randomOffset}px`;
+                heart.style.top = `${position.y + randomOffset}px`;
+
+                const startPos = getRandomStartPosition();
+                heart.style.setProperty('--start-x', `${startPos.x}px`);
+                heart.style.setProperty('--start-y', `${startPos.y}px`);
+
+                const flyInDuration = 2 + Math.random() * 2;
+                const pulseDelay = flyInDuration - 0.5;
+                heart.style.animationDuration = `${flyInDuration}s, 2s`;
+                heart.style.animationDelay = `0s, ${pulseDelay}s`;
+
+                const startOpacity = 0.3 + Math.random() * 0.7;
+                heart.style.setProperty('--start-opacity', startOpacity);
+
+                const color = getRandomColor();
+                heart.style.backgroundColor = color;
+
+                container.appendChild(heart);
+
+                // 当所有心形都创建完毕时，调用回调函数
+                heart.addEventListener('animationend', () => {
+                    heartsCreated++;
+                    if (heartsCreated === heartCount) {
+                        callback();
+                    }
+                }, {once: true});
+            }
+        }
+
+        function createStars() {
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = `${Math.random() * 3}px`;
+                star.style.height = star.style.width;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                background.appendChild(star);
+            }
+        }
+
+        function createClouds() {
+            const cloudCount = 3;
+            const cloudLayers = [
+                { yRange: [0, 30], speed: 60, size: [150, 250] },
+                { yRange: [30, 60], speed: 90, size: [100, 200] },
+                { yRange: [60, 90], speed: 120, size: [50, 150] }
+            ];
+
+            cloudLayers.forEach((layer, index) => {
+                for (let i = 0; i < cloudCount; i++) {
+                    const cloud = document.createElement('div');
+                    cloud.className = 'cloud';
+
+                    const width = Math.random() * (layer.size[1] - layer.size[0]) + layer.size[0];
+                    cloud.style.width = `${width}px`;
+                    cloud.style.height = `${width * 0.6}px`;
+
+                    cloud.style.left = `${(100 / cloudCount) * i + Math.random() * (100 / cloudCount)}%`;
+                    cloud.style.top = `${Math.random() * (layer.yRange[1] - layer.yRange[0]) + layer.yRange[0]}%`;
+
+                    cloud.style.animationDuration = `${layer.speed}s`;
+                    cloud.style.animationDelay = `-${Math.random() * layer.speed}s`;
+
+                    const before = document.createElement('div');
+                    before.style.width = `${width * 0.4}px`;
+                    before.style.height = `${width * 0.4 * 0.6}px`;
+                    before.style.top = `${width * 0.6 * 0.1}px`;
+                    before.style.left = `${width * 0.1}px`;
+
+                    const after = document.createElement('div');
+                    after.style.width = `${width * 0.6}px`;
+                    after.style.height = `${width * 0.6 * 0.6}px`;
+                    after.style.top = `${width * 0.6 * 0.3}px`;
+                    after.style.right = `${width * 0.1}px`;
+
+                    cloud.appendChild(before);
+                    cloud.appendChild(after);
+                    background.appendChild(cloud);
+                }
+            });
+        }
+
+        function createFlowers() {
+            const flowerCount = 50; // 每种花的数量
+            for (let i = 0; i < flowerCount; i++) {
+                createFlower('rose');
+                createFlower('lily');
+            }
+        }
+
+        function createFlower(type) {
+            const flower = document.createElement('div');
+            flower.className = `flower ${type}`;
+            const position = heartShape(Math.random() * Math.PI * 2);
+            flower.style.left = `${position.x}px`;
+            flower.style.top = `${position.y}px`;
+            container.appendChild(flower);
+        }
+
+        function showFlowers() {
+            const flowers = document.querySelectorAll('.flower');
+            flowers.forEach((flower, index) => {
+                setTimeout(() => {
+                    flower.style.opacity = '0.3'; // 设置较高的透明度
+                }, index * 50); // 每朵花之间有50ms的延迟
+            });
+        }
+
+        let audioContext;
+        let audioSource;
+        let isMusicPlaying = false;
+
+        function initAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            fetch('dream-wedding.mp3')
+                .then(response => response.arrayBuffer())
+                .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+                .then(audioBuffer => {
+                    audioSource = audioContext.createBufferSource();
+                    audioSource.buffer = audioBuffer;
+                    audioSource.connect(audioContext.destination);
+                    audioSource.loop = true;
+                });
+        }
+
+        function playAudio() {
+            if (audioSource && !isMusicPlaying) {
+                audioSource.start();
+                isMusicPlaying = true;
+                document.querySelector('.play-pause').setAttribute('d', 'M25,20 L35,30 L25,40 Z');
+            }
+        }
+
+        function stopAudio() {
+            if (audioSource && isMusicPlaying) {
+                audioSource.stop();
+                isMusicPlaying = false;
+                document.querySelector('.play-pause').setAttribute('d', 'M25,20 L25,40 L40,30 Z');
+                initAudio(); // 重新初始化音频源
+            }
+        }
+
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                stopAudio();
+            } else {
+                playAudio();
+                showFlowers();
+            }
+        }
+
+        function initializeAnimation() {
+            createStars();
+            createClouds();
+            createFlowers();
+            initAudio();
+
+            createHearts(() => {
+                playAudio();
+                showFlowers();
+            });
+        }
+
+        // 当页面加载完成后初始化动画
+        window.addEventListener('load', initializeAnimation);
+
+        // 添加音乐控制按钮的事件监听器
+        musicControl.addEventListener('click', toggleMusic);
+    </script>
+</body>
+</html>
