@@ -1,51 +1,56 @@
 import scrapy
-from book_spider.items import BookItem
+import io
+from PyPDF2 import PdfReader
+import requests
 
 
 class BookSpider(scrapy.Spider):
     name = 'book_spider'
-    start_urls = ['https://www.3anet.co.jp/np/books/4030/']
-
-    target_books = [
-        '小論文への１２のステップ',
-        '入社1年目ビジネスマナー教科書',
-        '日本語上級話者 への道 きちんと伝える技術と表現',
-        '外国人のための ケーススタディで学ぶビジネス日本語 中級'
-    ]
+    start_urls = ['https://www.3anet.co.jp/data/4030/?detailFlg=0']
 
     def parse(self, response):
         self.logger.info(f"Parsing page: {response.url}")
 
-        all_h2 = response.xpath('//h2/text()').getall()
-        self.logger.info(f"All h2 elements: {all_h2}")
+        # 查找所有可能的PDF链接
+        pdf_links = response.css('a[href$=".pdf"]::attr(href)').getall()
 
-        for book_title in self.target_books:
-            self.logger.info(f"Searching for book: {book_title}")
-            book = response.xpath(f'//*[contains(text(), "{book_title}")]/..')
-            if book:
-                self.logger.info(f"Found book: {book_title}")
-                item = BookItem()
-                item['title'] = book_title
-                item['author'] = book.xpath('.//p[@class="author"]/text()').get().strip()
-                item['price'] = book.xpath('.//p[@class="price"]/text()').get().strip()
-                item['isbn'] = book.xpath('.//p[@class="isbn"]/text()').get().strip()
+        if pdf_links:
+            for pdf_link in pdf_links:
+                yield scrapy.Request(url=response.urljoin(pdf_link), callback=self.parse_pdf)
+        else:
+            self.logger.warning("No PDF links found on the page.")
 
-                # 查找"立ち読み"按钮的链接
-                preview_url = book.xpath('.//a[contains(@class, "btn_preview")]/@href').get()
-                if preview_url:
-                    yield scrapy.Request(response.urljoin(preview_url), callback=self.parse_preview,
-                                         meta={'item': item})
-                else:
-                    self.logger.warning(f"Preview link not found for book: {book_title}")
-            else:
-                self.logger.warning(f"Book not found: {book_title}")
+    def parse_pdf(self, response):
+        self.logger.info(f"Processing PDF: {response.url}")
 
-    def parse_preview(self, response):
-        item = response.meta['item']
+        # 检查是否是PDF文件
+        if 'application/pdf' in response.headers.get('Content-Type', b'').decode('utf-8'):
+            # 保存PDF文件
+            filename = response.url.split('/')[-1]
+            pdf_path = f'scraped_books/{filename}'
+            with open(pdf_path, 'wb') as f:
+                f.write(response.body)
+            self.logger.info(f"Saved PDF: {pdf_path}")
 
-        # 提取试读内容
-        preview_content = response.xpath('//div[@class="preview-content"]//text()').getall()
-        item['preview'] = '\n'.join([content.strip() for content in preview_content if content.strip()])
+            # 提取PDF文本
+            try:
+                reader = PdfReader(io.BytesIO(response.body))
+                text = ""
+                for page in reader.pages:
+                    text += page.extract_text() + "\n"
 
-        self.logger.info(f"Extracted preview for book: {item['title']}")
-        yield item
+                # 保存提取的文本
+                txt_filename = pdf_path.replace('.pdf', '.txt')
+                with open(txt_filename, 'w', encoding='utf-8') as f:
+                    f.write(text)
+                self.logger.info(f"Saved text: {txt_filename}")
+
+                yield {
+                    'pdf_url': response.url,
+                    'pdf_file': pdf_path,
+                    'text_file': txt_filename
+                }
+            except Exception as e:
+                self.logger.error(f"Error extracting text from PDF: {e}")
+        else:
+            self.logger.warning(f"The response is not a PDF file: {response.url}")
